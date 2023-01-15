@@ -1,0 +1,44 @@
+<launch>
+
+    <!-- Initial USV location and attitude-->
+    <arg name="x" default="-532" />
+    <arg name="y" default="162" />
+    <arg name="z" default="0.1" />
+    <arg name="P" default="0" />
+    <arg name="R" default="0" />
+    <arg name="Y" default="1" />
+
+    <arg name="namespace" default="wamv"/>
+
+    <!-- Allow user specified thruster configurations
+         H = stern trusters on each hull
+         T = H with a lateral thruster
+         X = "holonomic" configuration -->
+    <arg name="thrust_config" default="T" />
+
+    <!-- Do we lock the vessel to the world? -->
+    <arg name="wamv_locked" default="true" />
+
+    <!-- Do we load the VRX sensor suite? -->
+    <arg name="vrx_sensors_enabled" default="true" />
+
+    <!-- Load robot model -->
+    <arg name="urdf" default="$(find wamv_gazebo)/urdf/wamv_gazebo.urdf.xacro"/>
+    <param name="robot_description"
+           command="$(find xacro)/xacro --inorder '$(arg urdf)'
+         locked:=$(arg wamv_locked)
+         thruster_config:=$(arg thrust_config)
+         vrx_sensors_enabled:=$(arg vrx_sensors_enabled)
+         namespace:=$(arg namespace) "/>
+
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">
+        <param name="publish_frequency" type="double" value="50.0" />
+        <param name="tf_prefix" value="$(arg namespace)" />
+    </node>
+
+    <!-- Spawn model in Gazebo -->
+    <node name="spawn_model" pkg="gazebo_ros" type="spawn_model"
+          args="-x $(arg x) -y $(arg y) -z $(arg z)
+              -R $(arg R) -P $(arg P) -Y $(arg Y)
+              -urdf -param $(arg namespace)/robot_description -model $(arg namespace) "/>
+</launch>
