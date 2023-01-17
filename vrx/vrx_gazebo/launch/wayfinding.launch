@@ -36,17 +36,25 @@
       <arg name="Y" value="1"/>
       <arg name="namespace" value="$(arg namespace1)"/>
     </include>
+
+    <include file="$(find vrx_gazebo)/launch/wayfind.launch">
+
+    </include>
   </group>
 
   <group ns="$(arg namespace2)">
     <include file="$(find vrx_gazebo)/launch/spawn_model.launch">
       <arg name="x" value="-500"/>
-      <arg name="y" value="162"/>
+      <arg name="y" value="168"/>
       <arg name="z" value="0.1"/>
       <arg name="P" value="0"/>
       <arg name="R" value="0"/>
       <arg name="Y" value="1"/>
       <arg name="namespace" value="$(arg namespace2)"/>
+    </include>
+
+    <include file="$(find vrx_gazebo)/launch/wayfind.launch">
+
     </include>
   </group>
 

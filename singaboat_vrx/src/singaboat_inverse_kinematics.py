@@ -88,12 +88,12 @@ if __name__ == '__main__':
     inverse_kinematics_node.right_thruster_msg  = Float32()
 
     # Subscriber
-    rospy.Subscriber('/wamv/cmd_vel', Twist, inverse_kinematics_node.inverse_kinematics_callback)
+    rospy.Subscriber('wamv/cmd_vel', Twist, inverse_kinematics_node.inverse_kinematics_callback)
 
     # Publishers
-    inverse_kinematics_node.center_thruster_pub = rospy.Publisher('/wamv/thrusters/center_thruster_thrust_cmd', Float32, queue_size = 10)
-    inverse_kinematics_node.left_thruster_pub   = rospy.Publisher('/wamv/thrusters/left_thruster_thrust_cmd', Float32, queue_size = 10)
-    inverse_kinematics_node.right_thruster_pub  = rospy.Publisher('/wamv/thrusters/right_thruster_thrust_cmd', Float32, queue_size = 10)
+    inverse_kinematics_node.center_thruster_pub = rospy.Publisher('thrusters/center_thrust_cmd', Float32, queue_size = 10)
+    inverse_kinematics_node.left_thruster_pub   = rospy.Publisher('thrusters/left_thrust_cmd', Float32, queue_size = 10)
+    inverse_kinematics_node.right_thruster_pub  = rospy.Publisher('thrusters/right_thrust_cmd', Float32, queue_size = 10)
 
     try:
         rospy.spin()

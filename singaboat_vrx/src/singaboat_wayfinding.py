@@ -7,7 +7,7 @@ import tf
 from sensor_msgs.msg import NavSatFix
 from sensor_msgs.msg import Imu
 from geographic_msgs.msg import GeoPath
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import Twist, PoseStamped
 from dynamic_reconfigure.server import Server
 from singaboat_vrx.cfg import WayfindingConfig
 from singaboat_vrx.control_module import PIDController
@@ -38,6 +38,9 @@ class Wayfinding:
         self.cmd_vel_msg    = None
         self.cmd_vel_pub    = None
         self.dyn_reconf_srv = None
+        self.ns = rospy.get_namespace()
+        self.ns = self.ns[1:]
+        # self.enu_publish = rospy.Publisher(f"{self.ns}/enu_pose", PoseStamped, 10)
 
     def gps_callback(self, msg):
         if self.cur_rot is None: # If no yaw data is available, GPS offset cannot be compensated
@@ -74,10 +77,21 @@ class Wayfinding:
 
     def wayfinding(self):
         # Broadcast transform of `wamv/base_link` frame w.r.t. `world` frame
-        self.tf_broadcaster.sendTransform((self.cur_position[0], self.cur_position[1], self.cur_position[2]), (self.cur_rotation[0], self.cur_rotation[1], self.cur_rotation[2], self.cur_rotation[3]), rospy.Time.now(), 'wamv/base_link', 'world')
+        self.tf_broadcaster.sendTransform((self.cur_position[0], self.cur_position[1], self.cur_position[2]), (self.cur_rotation[0], self.cur_rotation[1], self.cur_rotation[2], self.cur_rotation[3]), rospy.Time.now(), f"{self.ns}/{self.ns}/base_link", 'world')
+
+        # current_pose = PoseStamped()
+        # current_pose.header.stamp = rospy.Time.now()
+        # current_pose.pose.position.x = self.cur_position[0]
+        # current_pose.pose.position.y = self.cur_position[1]
+        # current_pose.pose.position.z = self.cur_position[2]
+        # current_pose.pose.orientation.x = self.cur_rotation[0]
+        # current_pose.pose.orientation.y = self.cur_rotation[1]
+        # current_pose.pose.orientation.z = self.cur_rotation[2]
+        # current_pose.pose.orientation.w = self.cur_rotation[3]
+        # self.enu_publish.publish(current_pose)
         # Broadcast transform of `waypoint_i` frame w.r.t. `world` frame
         for i in range(self.wp_count):
-            frame_id = 'waypoint_' + str(i)
+            frame_id = f"{self.ns}/waypoint_{i}"
             self.tf_broadcaster.sendTransform((self.wps_position[i][0], self.wps_position[i][1], self.wps_position[i][2]), (self.wps_rotation[i][0], self.wps_rotation[i][1], self.wps_rotation[i][2], self.wps_rotation[i][3]), rospy.Time.now(), frame_id, 'world')
         # Proceed to current waypoint until it is actually reached
         self.cmd_pos = numpy.array([self.wps_pos_x[self.wp_index], self.wps_pos_y[self.wp_index]])
@@ -156,16 +170,17 @@ if __name__ == '__main__':
     wayfinding_node.cmd_vel_msg  = Twist()
 
     # Subscribers
-    rospy.Subscriber('/wamv/sensors/gps/gps/fix', NavSatFix, wayfinding_node.gps_callback)
-    rospy.Subscriber('/wamv/sensors/imu/imu/data', Imu, wayfinding_node.imu_callback)
+    rospy.Subscriber( f"{wayfinding_node.ns}/sensors/gps/gps/fix", NavSatFix, wayfinding_node.gps_callback)
+    rospy.Subscriber(f"{wayfinding_node.ns}/sensors/imu/imu/data", Imu, wayfinding_node.imu_callback)
+    # rospy.Subscriber(f"{wayfinding_node.ns}/wayfinding/waypoints", GeoPath, wayfinding_node.waypoint_callback)
     rospy.Subscriber('/vrx/wayfinding/waypoints', GeoPath, wayfinding_node.waypoint_callback)
 
     # Publisher
-    wayfinding_node.cmd_vel_pub  = rospy.Publisher('/wamv/cmd_vel', Twist, queue_size = 10)
+    wayfinding_node.cmd_vel_pub  = rospy.Publisher('wamv/cmd_vel', Twist, queue_size = 10)
 
     # Wait for valid messages to ensure proper state initialization
-    rospy.wait_for_message('/wamv/sensors/gps/gps/fix', NavSatFix)
-    rospy.wait_for_message('/wamv/sensors/imu/imu/data', Imu)
+    rospy.wait_for_message(f"{wayfinding_node.ns}/sensors/gps/gps/fix", NavSatFix)
+    rospy.wait_for_message(f"{wayfinding_node.ns}/sensors/imu/imu/data", Imu)
     rospy.wait_for_message('/vrx/wayfinding/waypoints', GeoPath)
 
     # ROS rate
