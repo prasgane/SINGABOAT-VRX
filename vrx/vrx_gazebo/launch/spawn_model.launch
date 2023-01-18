@@ -9,6 +9,7 @@
     <arg name="Y" default="1" />
 
     <arg name="namespace" default="wamv"/>
+    <arg name="ground_truth_enabled" default="true"/>
 
     <!-- Allow user specified thruster configurations
          H = stern trusters on each hull
@@ -29,6 +30,7 @@
          locked:=$(arg wamv_locked)
          thruster_config:=$(arg thrust_config)
          vrx_sensors_enabled:=$(arg vrx_sensors_enabled)
+         ground_truth_enabled:=$(arg ground_truth_enabled)
          namespace:=$(arg namespace)"/>
 
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher" output="screen">

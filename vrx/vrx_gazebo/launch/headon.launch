@@ -43,12 +43,12 @@
 
   <group ns="$(arg namespace2)">
     <include file="$(find vrx_gazebo)/launch/spawn_model.launch">
-      <arg name="x" value="-510"/>
-      <arg name="y" value="190"/>
+      <arg name="x" value="-435"/>
+      <arg name="y" value="180"/>
       <arg name="z" value="0.1"/>
       <arg name="P" value="0"/>
       <arg name="R" value="0"/>
-      <arg name="Y" value="0."/>
+      <arg name="Y" value="3.14"/>
       <arg name="namespace" value="$(arg namespace2)"/>
     </include>
 
