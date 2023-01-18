@@ -40,6 +40,7 @@ class Wayfinding:
         self.dyn_reconf_srv = None
         self.ns = rospy.get_namespace()
         self.ns = self.ns[1:]
+        self.ns = self.ns[:-1]
         # self.enu_publish = rospy.Publisher(f"{self.ns}/enu_pose", PoseStamped, 10)
 
     def gps_callback(self, msg):
@@ -78,17 +79,6 @@ class Wayfinding:
     def wayfinding(self):
         # Broadcast transform of `wamv/base_link` frame w.r.t. `world` frame
         self.tf_broadcaster.sendTransform((self.cur_position[0], self.cur_position[1], self.cur_position[2]), (self.cur_rotation[0], self.cur_rotation[1], self.cur_rotation[2], self.cur_rotation[3]), rospy.Time.now(), f"{self.ns}/{self.ns}/base_link", 'world')
-
-        # current_pose = PoseStamped()
-        # current_pose.header.stamp = rospy.Time.now()
-        # current_pose.pose.position.x = self.cur_position[0]
-        # current_pose.pose.position.y = self.cur_position[1]
-        # current_pose.pose.position.z = self.cur_position[2]
-        # current_pose.pose.orientation.x = self.cur_rotation[0]
-        # current_pose.pose.orientation.y = self.cur_rotation[1]
-        # current_pose.pose.orientation.z = self.cur_rotation[2]
-        # current_pose.pose.orientation.w = self.cur_rotation[3]
-        # self.enu_publish.publish(current_pose)
         # Broadcast transform of `waypoint_i` frame w.r.t. `world` frame
         for i in range(self.wp_count):
             frame_id = f"{self.ns}/waypoint_{i}"
@@ -102,6 +92,9 @@ class Wayfinding:
             if numpy.linalg.norm(err_pos) > self.goal_tol: # (Euclidean distance to goal as L2 norm)
                 # If far from goal, head directly towards the goal by controlling Vx & Wz
                 lin_vel_x = numpy.linalg.norm(err_pos) * self.v_const # P controller for Vx
+                if self.ns == "wamv2":
+                    print("Reducing speed!!!!")
+                    self.v_limit = self.v_limit/1.5
                 if lin_vel_x > self.v_limit: # Clamp linear velocity along X-axis
                     lin_vel_x = self.v_limit
                 lin_vel_y = 0.0
@@ -173,7 +166,8 @@ if __name__ == '__main__':
     rospy.Subscriber( f"{wayfinding_node.ns}/sensors/gps/gps/fix", NavSatFix, wayfinding_node.gps_callback)
     rospy.Subscriber(f"{wayfinding_node.ns}/sensors/imu/imu/data", Imu, wayfinding_node.imu_callback)
     # rospy.Subscriber(f"{wayfinding_node.ns}/wayfinding/waypoints", GeoPath, wayfinding_node.waypoint_callback)
-    rospy.Subscriber('/vrx/wayfinding/waypoints', GeoPath, wayfinding_node.waypoint_callback)
+    rospy.Subscriber('/vrx/waypoints', GeoPath, wayfinding_node.waypoint_callback)
+    # rospy.Subscriber('/vrx/wayfinding/waypoints', GeoPath, wayfinding_node.waypoint_callback)
 
     # Publisher
     wayfinding_node.cmd_vel_pub  = rospy.Publisher('wamv/cmd_vel', Twist, queue_size = 10)
@@ -181,7 +175,8 @@ if __name__ == '__main__':
     # Wait for valid messages to ensure proper state initialization
     rospy.wait_for_message(f"{wayfinding_node.ns}/sensors/gps/gps/fix", NavSatFix)
     rospy.wait_for_message(f"{wayfinding_node.ns}/sensors/imu/imu/data", Imu)
-    rospy.wait_for_message('/vrx/wayfinding/waypoints', GeoPath)
+    # rospy.wait_for_message('/vrx/wayfinding/waypoints', GeoPath)
+    rospy.wait_for_message('/vrx/waypoints', GeoPath)
 
     # ROS rate
     rate = rospy.Rate(20)
