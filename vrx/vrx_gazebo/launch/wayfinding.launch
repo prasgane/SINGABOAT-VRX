@@ -37,7 +37,7 @@
       <arg name="namespace" value="$(arg namespace1)"/>
     </include>
 
-    <include file="controller.launch">
+    <include file="$(find vrx_gazebo)/launch/controller.launch">
 
     </include>
   </group>
@@ -53,7 +53,7 @@
       <arg name="namespace" value="$(arg namespace2)"/>
     </include>
 
-    <include file="$(find vrx_gazebo)/launch/controller.launch">
+<!--    <include file="$(find vrx_gazebo)/launch/controller.launch">-->
 
     </include>
   </group>
